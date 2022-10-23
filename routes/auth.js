@@ -4,6 +4,7 @@ import { check, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 
 import User from '../models/User.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = new Router();
 
@@ -54,12 +55,33 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Incorrect password' });
     }
 
-    const token = jwt.sign({ id }, 'jwt-cloud-app-secret', { expiresIn: '24h' });
+    const token = jwt.sign({ id }, process.env.JWT_SECRET_KEY, { expiresIn: '24h' });
     return res.json({
       token,
       userInfo: {
         id,
         email: userEmail,
+        name,
+        fullDiskSpace,
+        emptySpace,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.send({ message: 'Server error' });
+  }
+});
+
+router.get('/auth', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.user.id });
+    const { id, email, name, fullDiskSpace, emptySpace } = user;
+    const token = jwt.sign({ id }, process.env.JWT_SECRET_KEY, { expiresIn: '24h' });
+    return res.json({
+      token,
+      userInfo: {
+        id,
+        email,
         name,
         fullDiskSpace,
         emptySpace,

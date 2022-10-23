@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import {} from 'dotenv/config';
 
-import corsMiddleware from './middleware/cors.js';
+import corsMiddleware from './middleware/corsMiddleware.js';
 import authRouter from './routes/auth.js';
 
 const app = express();
