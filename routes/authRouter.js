@@ -4,11 +4,13 @@ import { check, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 
 import User from '../models/User.js';
+import File from '../models/File.js';
 import authMiddleware from '../middleware/authMiddleware.js';
+import fileService from '../services/fileService.js';
 
-const router = new Router();
+const authRouter = new Router();
 
-router.post(
+authRouter.post(
   '/registration',
   [
     check('email', 'Invalid email').isEmail(),
@@ -32,15 +34,16 @@ router.post(
       const safePassword = await bcrypt.hash(password, 5);
       const user = new User({ email, password: safePassword });
       await user.save();
+      await fileService.createDirectory(new File({ user: user.id, name: '' }));
       return res.json({ message: `User with email ${email} was successfully created` });
     } catch (error) {
-      console.log(error);
+      console.warn(error);
       res.send({ message: 'Server error' });
     }
   }
 );
 
-router.post('/login', async (req, res) => {
+authRouter.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -55,7 +58,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Incorrect password' });
     }
 
-    const token = jwt.sign({ id }, process.env.JWT_SECRET_KEY, { expiresIn: '24h' });
+    const token = jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: process.env.TOKEN_EXPIRED_TIME,
+    });
     return res.json({
       token,
       userInfo: {
@@ -67,16 +72,18 @@ router.post('/login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    console.warn(error);
     res.send({ message: 'Server error' });
   }
 });
 
-router.get('/auth', authMiddleware, async (req, res) => {
+authRouter.get('/auth', authMiddleware, async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.user.id });
     const { id, email, name, fullDiskSpace, emptySpace } = user;
-    const token = jwt.sign({ id }, process.env.JWT_SECRET_KEY, { expiresIn: '24h' });
+    const token = jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: process.env.TOKEN_EXPIRED_TIME,
+    });
     return res.json({
       token,
       userInfo: {
@@ -88,9 +95,9 @@ router.get('/auth', authMiddleware, async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    console.warn(error);
     res.send({ message: 'Server error' });
   }
 });
 
-export default router;
+export default authRouter;

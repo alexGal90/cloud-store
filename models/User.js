@@ -1,4 +1,4 @@
-import { Schema, model, ObjectId } from 'mongoose';
+import { Schema, model, Types } from 'mongoose';
 
 const User = new Schema({
   email: { type: String, required: true, unique: true },
@@ -6,7 +6,7 @@ const User = new Schema({
   name: { type: String },
   fullDiskSpace: { type: Number, default: 1024 ** 3 * 10 },
   emptySpace: { type: Number, default: 1024 ** 3 * 10 },
-  files: [{ type: ObjectId, ref: 'File' }],
+  files: [{ type: Types.ObjectId, ref: 'File' }],
 });
 
 export default model('User', User);
