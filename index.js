@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import {} from 'dotenv/config';
+import fileUpload from 'express-fileupload';
 
 import corsMiddleware from './middleware/corsMiddleware.js';
 import authRouter from './routes/authRouter.js';
@@ -11,6 +12,7 @@ const PORT = process.env.PORT;
 
 app.use(corsMiddleware);
 app.use(express.json());
+app.use(fileUpload({}));
 app.use('/auth', authRouter);
 app.use('/file', fileRouter);
 
