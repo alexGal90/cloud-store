@@ -18,7 +18,15 @@ app.use('/file', fileRouter);
 
 const start = async () => {
   try {
-    mongoose.connect(process.env.MONGO_DB_CONNECT_URL);
+    // // Connection to cloud mondoDB server
+    // mongoose.connect(process.env.MONGO_DB_CONNECT_URL_CLOUD).then(() => {
+    //   console.log('Cloud mongodb connected');
+    // });
+
+    // Connection to locak mondoDB server
+    mongoose.connect(process.env.MONGO_DB_CONNECT_URL_LOCAL).then(() => {
+      console.log('Local mongodb connected');
+    });
 
     app.listen(PORT, () => {
       console.log(`Server started on port ${PORT}`);
