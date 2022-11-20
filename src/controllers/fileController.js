@@ -10,12 +10,15 @@ class FileController {
       const { name, extension, parentFoldery } = req.body;
       const file = new File({ name, extension, parentFoldery, user: req.user.id });
       const parentFile = await File.findOne({ _id: parentFoldery });
+
+      // If this foldery has parent folder save it inside this foldery
       if (parentFile) {
         file.path = `${parentFile.path}/${file.name}`;
         await fileService.createDirectory(file);
         parentFile.children.push(file._id);
         await parentFile.save();
       } else {
+        // If there is no parent foldery save it in root level
         file.path = name;
         await fileService.createDirectory(file);
       }
@@ -29,16 +32,18 @@ class FileController {
 
   async getFiles(req, res) {
     try {
+      // Get the list of files in current directory
       const files = await File.find({ user: req.user.id, parentFoldery: req.query.parentFoldery });
       return res.json(files);
     } catch (error) {
       console.warn(error);
-      return res.status(500).json({ message: "Can't find files" });
+      return res.status(500).json({ message: 'Files are not found' });
     }
   }
 
   async uploadFile(req, res) {
     try {
+      // Check single or multiple files are uploaded
       const files = Array.isArray(req.files.file) ? req.files.file : [req.files.file];
       let response = [];
 
@@ -47,14 +52,18 @@ class FileController {
           user: req.user.id,
           _id: req.body.parentFoldery,
         });
+
         const user = await User.findOne({ _id: req.user.id });
 
         if (user.emptySpace - file.size < 0) {
-          return res.status(400).json({ message: 'Not enough space on your disk' });
+          return res.status(400).json({ message: 'There is no enough space' });
         }
 
+        // Update user empty space
         user.emptySpace -= file.size;
 
+        // If parent foldery exists save inside it
+        // else save in root folsery
         const filePath = `${process.env.FILE_PATH}/${user._id}${
           parentFoldery ? `/${parentFoldery.path}` : ''
         }/${file.name}`;
@@ -63,6 +72,7 @@ class FileController {
           return res.status(400).json({ message: 'File is already existed' });
         }
 
+        // Save the file on the server
         file.mv(filePath);
 
         const extension = file.name.split('.').pop();
@@ -97,7 +107,7 @@ class FileController {
         return res.download(filePath, file.name);
       }
 
-      return res.status(400).json({ message: 'File downloading error' });
+      return res.status(400).json({ message: 'File is not found' });
     } catch (error) {
       console.warn(error);
       return res.status(500).json({ message: 'File downloading error' });
@@ -110,7 +120,10 @@ class FileController {
       if (!file) {
         return res.status(400).json({ message: 'File not found' });
       }
+      // Remove the file from server
       fileService.removeFile(file);
+
+      // Remove file from DB
       await file.remove();
       return res.json({ message: 'file was removed' });
     } catch (error) {

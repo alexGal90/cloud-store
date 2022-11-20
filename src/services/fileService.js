@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 
+// This service works with server file system
 class FileService {
   createDirectory(file) {
     const filePath = this.getPath(file);
@@ -26,6 +27,7 @@ class FileService {
     }
   }
 
+  // Helper method to get full file path
   getPath(file) {
     return `${process.env.FILE_PATH}/${file.user}/${file.path}`;
   }
