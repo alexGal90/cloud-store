@@ -88,6 +88,12 @@ class FileController {
 
         await fileDB.save();
         await user.save();
+
+        // Add the file as a child for parent foldery
+        if (parentFoldery) {
+          parentFoldery.children.push(fileDB._id);
+          await parentFoldery.save();
+        }
         response.push(fileDB);
       }
 
@@ -124,8 +130,19 @@ class FileController {
       fileService.removeFile(file);
 
       // Remove file from DB
+      const removeFilesRecursive = async (fileChildren, userId) => {
+        for (const fileId of fileChildren) {
+          const fileDB = await File.findOne({ _id: fileId, user: userId });
+          if (fileDB.children.length) {
+            removeFilesRecursive(fileDB.children, userId);
+          }
+          await fileDB.remove();
+        }
+      };
+
+      removeFilesRecursive(file.children, req.user.id);
       await file.remove();
-      return res.json({ message: 'file was removed' });
+      return res.json({ message: 'File was removed' });
     } catch (error) {
       console.warn(error);
       res.status(500).json({ message: 'File removing error' });

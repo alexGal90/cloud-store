@@ -21,7 +21,7 @@ class FileService {
   removeFile(file) {
     const filePath = this.getPath(file);
     if (file.extension === 'dir') {
-      fs.rmdirSync(filePath);
+      fs.rmSync(filePath, { recursive: true, force: true });
     } else {
       fs.unlinkSync(filePath);
     }
