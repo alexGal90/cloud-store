@@ -148,6 +148,34 @@ class FileController {
       res.status(500).json({ message: 'File removing error' });
     }
   }
+
+  async renameFile(req, res) {
+    try {
+      const file = await File.findOne({ _id: req.body.id, user: req.user.id });
+      fileService.renameFile(file, req.body.name);
+      file.path = `${file.path.slice(0, file.path.length - file.name.length)}${req.body.name}`;
+      file.name = req.body.name;
+      await file.save();
+
+      const updateChildrenFilePathRecursive = async (file, userId) => {
+        for (const childId of file.children) {
+          const childFileDB = await File.findOne({ _id: childId, user: userId });
+          if (childFileDB.children.length) {
+            updateChildrenFilePathRecursive(childFileDB, userId);
+          }
+          childFileDB.path = `${file.path}/${childFileDB.name}`;
+          await childFileDB.save();
+        }
+      };
+
+      updateChildrenFilePathRecursive(file, req.user.id);
+
+      return res.json({ message: 'File was renamed' });
+    } catch (error) {
+      console.warn(error);
+      res.status(500).json({ message: 'File renaming error' });
+    }
+  }
 }
 
 export default new FileController();

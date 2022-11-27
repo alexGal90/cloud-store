@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 
-// This service works with server file system
+// This service works with the server file system
 class FileService {
   createDirectory(file) {
     const filePath = this.getPath(file);
@@ -25,6 +25,12 @@ class FileService {
     } else {
       fs.unlinkSync(filePath);
     }
+  }
+
+  renameFile(file, newName) {
+    const filePath = this.getPath(file);
+    const newFilePath = `${filePath.slice(0, filePath.length - file.name.length)}${newName}`;
+    fs.renameSync(filePath, newFilePath);
   }
 
   // Helper method to get full file path
