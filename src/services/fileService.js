@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import fse from 'fs-extra/esm';
 
 // This service works with the server file system
 class FileService {
@@ -31,6 +32,14 @@ class FileService {
     const filePath = this.getPath(file);
     const newFilePath = `${filePath.slice(0, filePath.length - file.name.length)}${newName}`;
     fs.renameSync(filePath, newFilePath);
+  }
+
+  copyFile(file, fileCopyParentFoldery) {
+    const filePath = this.getPath(file);
+    const fileCopyParentFolderyPath = fileCopyParentFoldery
+      ? `${this.getPath(fileCopyParentFoldery)}/${file.name}`
+      : `${process.env.FILE_PATH}/${file.user}/${file.name}`;
+    fse.copySync(filePath, fileCopyParentFolderyPath, { overwrite: false });
   }
 
   // Helper method to get full file path

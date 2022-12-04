@@ -160,7 +160,7 @@ class FileController {
       const updateChildrenFilePathRecursive = async (file, userId) => {
         for (const childId of file.children) {
           const childFileDB = await File.findOne({ _id: childId, user: userId });
-          if (childFileDB.children.length) {
+          if (childFileDB?.children.length) {
             updateChildrenFilePathRecursive(childFileDB, userId);
           }
           childFileDB.path = `${file.path}/${childFileDB.name}`;
@@ -174,6 +174,29 @@ class FileController {
     } catch (error) {
       console.warn(error);
       res.status(500).json({ message: 'File renaming error' });
+    }
+  }
+
+  async copyFile(req, res) {
+    try {
+      const file = await File.findOne({ _id: req.body.id, user: req.user.id });
+      if (!file) {
+        return res.status(400).json({ message: 'File not found' });
+      }
+
+      const fileCopyParentFoldery = req.body.parentFoldery
+        ? await File.findOne({
+            _id: req.body.parentFoldery,
+            user: req.user.id,
+          })
+        : null;
+
+      // Copy files on server
+      fileService.copyFile(file, fileCopyParentFoldery);
+      return res.json({ message: 'Files were copied' });
+    } catch (error) {
+      console.warn(error);
+      res.status(500).json({ message: 'File copying error' });
     }
   }
 }

@@ -11,5 +11,6 @@ fileRouter.post('/upload-file', authMiddleware, fileController.uploadFile);
 fileRouter.get('/download-file', authMiddleware, fileController.downloadFile);
 fileRouter.delete('', authMiddleware, fileController.removeFile);
 fileRouter.patch('/rename', authMiddleware, fileController.renameFile);
+fileRouter.post('/copy', authMiddleware, fileController.copyFile);
 
 export default fileRouter;
